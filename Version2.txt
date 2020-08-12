@@ -1,0 +1,395 @@
+
+        Private Sub CommandButton1_Click()
+        
+        Dim Get_Path As String
+        'Declaring Varible as Store path.
+            With Application.FileDialog(msoFileDialogFolderPicker)
+            
+            If .Show <> 0 Then
+                Get_Path = .SelectedItems(1)
+            
+            End If
+          
+            MsgBox (Get_Path)
+            
+            End With
+            
+        
+        
+        End Sub
+        
+        
+Function Copy_Folder(FromPath As String, ToPath As String)
+'This example copy all files and subfolders from FromPath to ToPath.
+'Note: If ToPath already exist it will overwrite existing files in this folder
+'if ToPath not exist it will be made for you.
+    Dim FSO As Object
+
+
+    'FromPath = "C:\Users\Ron\Data"  '<< Change
+    'ToPath = "C:\Users\Ron\Test"    '<< Change
+
+    'If you want to create a backup of your folder every time you run this macro
+    'you can create a unique folder with a Date/Time stamp.
+    'ToPath = "C:\Users\Ron\" & Format(Now, "yyyy-mm-dd h-mm-ss")
+
+    If Right(FromPath, 1) = "\" Then
+        FromPath = Left(FromPath, Len(FromPath) - 1)
+    End If
+
+    If Right(ToPath, 1) = "\" Then
+        ToPath = Left(ToPath, Len(ToPath) - 1)
+    End If
+
+    Set FSO = CreateObject("scripting.filesystemobject")
+
+    If FSO.FolderExists(FromPath) = False Then
+        MsgBox FromPath & " doesn't exist"
+        Exit Function
+    End If
+    ToPath = ToPath & "\UpdatedSheets\"
+    MkDir ToPath
+    FSO.CopyFolder Source:=FromPath, Destination:=ToPath
+    'MsgBox "You can find the files and subfolders from " & FromPath & " in " & ToPath
+   
+
+End Function
+        
+Function ListallFiles(sFolderPath As String) As Integer
+    Dim sFileName As String
+    'Dim sFolderPath As String: sFolderPath = "C:\Users\russel.d.r.bayanado\Documents\5\Rev1\ddr.c"     ' Change folder path. Ensure that folder path ends with "\"
+    Dim oWB As Workbook
+    Dim oWS As Worksheet
+
+    ' Get the first excel file name from specified folder
+    sFileName = Dir(sFolderPath & "*.xlsx*")
+
+    ' Add a worksheet
+
+
+
+        ' Loop through all excel files in the specified folder
+        Do While Len(Trim(sFileName)) > 0
+
+            ' Open workbook
+            Set oWB = Workbooks.Open(sFolderPath & sFileName)
+
+            ' Set workbook details in the file
+            ListallFiles = ListallFiles + oWB.Worksheets.Count
+
+            ' Close workbook
+            oWB.Close False
+
+            ' Clear workbook object
+            Set oWB = Nothing
+
+            ' Get next excel file
+            sFileName = Dir()
+        Loop
+
+
+
+End Function
+
+
+        
+        Function FolderCount(dirpath As String, Optional namematch As String) As Long
+        
+            Dim FSO As Object, mydir As Object, tempdir As Object, i As Long
+        
+            Set FSO = CreateObject("Scripting.FileSystemObject")
+            Set mydir = FSO.GetFolder(dirpath)
+        
+            For Each tempdir In mydir.SubFolders
+                If IsMissing(namematch) Then
+                    i = i + 1
+                Else
+                    If InStr(tempdir.Name, namematch) > 0 Then i = i + 1
+                End If
+            Next
+            
+            Set mydir = Nothing
+            Set FSO = Nothing
+        
+            FolderCount = i
+        End Function
+        
+    
+        
+        
+        
+        
+        
+        Function WorkSheetExists(SheetName As String, wb As Workbook, SheetNumber As Integer) As Integer
+            
+            
+            For Each Sheet In wb.Worksheets
+                
+                If SheetName = Sheet.Name Then
+                    WorkSheetExists = SheetNumber
+                    
+                    Exit Function
+                
+                End If
+            
+            Next Sheet
+        
+        
+        End Function
+        
+        
+        
+        
+        
+        Function CopySheetFromClosedWB(Filename As String, SheetName As String)
+        Application.ScreenUpdating = False
+         
+            Set closedBook = Workbooks.Open(Filename)
+            closedBook.Sheets(SheetName).Copy Before:=ThisWorkbook.Sheets(2)
+            closedBook.Close SaveChanges:=False
+         
+        Application.ScreenUpdating = True
+        End Function
+        
+     
+Function UpdateSheets(myPath As String, Filename As String, SheetName As String)
+'PURPOSE: To loop through all Excel files in a user specified folder and perform a set task on them
+'SOURCE: www.TheSpreadsheetGuru.com
+
+Dim wb As Workbook
+
+Dim myFile As String
+Dim myExtension As String
+Dim FldrPicker As FileDialog
+Dim i As Integer
+
+
+'Target File Extension (must include wildcard "*")
+  myExtension = "*.xls*"
+
+'Target Path with Ending Extention
+  myFile = Dir(myPath & myExtension)
+  i = 0
+'Loop through each Excel file in folder
+  Do While myFile <> ""
+    'Set variable equal to opened workbook
+      Set wb = Workbooks.Open(Filename:=myPath & myFile)
+      Set closedBook = Workbooks.Open(Filename)
+      
+      
+      For Each Sheet In Worksheets
+        i = i + 1
+        If Sheet.Name = SheetName Then
+            
+            wb.Worksheets("SheetName").Delete
+            closedBook.Sheets(SheetName).Copy Before:=wb.Sheets(i - 1)
+        End If
+            
+            
+        
+      Next Sheet
+    
+        
+    
+    
+    'Ensure Workbook has opened before moving on to next line of code
+      DoEvents
+    
+    
+    'Save and Close Workbook
+      wb.Close SaveChanges:=True
+      closedBook.Close SaveChanges:=False
+      
+    'Ensure Workbook has closed before moving on to next line of code
+      DoEvents
+
+    'Get next file name
+      myFile = Dir
+  Loop
+
+'Message Box when tasks are completed
+  MsgBox "Task Complete!"
+
+ResetSettings:
+  'Reset Macro Optimization Settings
+    Application.EnableEvents = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+
+End Function
+        
+        
+        
+        
+        
+        
+        
+        
+        Sub LoopAllExcelFilesInFolder()
+        
+        
+        Dim TextFile As Integer
+        Dim FilePath As String
+        
+        Dim wb As Workbook
+        Dim myPath As String
+        Dim myFile As String
+        Dim ArrayCounter As Integer
+        Dim Results(1 To 20) As String
+        Dim ResultCounter As Integer
+        Dim SheetCount As Integer
+        
+        
+        
+        
+        Dim myExtension As String
+        Dim FldrPicker As FileDialog
+        Dim FolderCounter As Double
+        Dim N As Integer
+        Dim FinalName As String
+        Dim FunctionName As String
+        Dim BaseRev As String
+         SheetCount = 0
+        Dim SheetLatest As String
+        Dim BaseFolder As String
+        
+        FilePath = "C:\Users\russel.d.r.bayanado\Documents\5\Results.txt"
+        
+        
+        
+        
+        
+        
+        
+        Dim FuncArray(1 To 3) As String
+        Dim ListArray(1 To 3) As String
+        Dim CFile As String
+        
+        'Functions na gusto HAnapin
+        FuncArray(1) = "Function1"
+        FuncArray(2) = "Function2"
+        FuncArray(3) = "Function3"
+        
+        CFile = "ddr.c"
+        
+        'Optimize Macro Speed
+          Application.ScreenUpdating = False
+          Application.EnableEvents = False
+          Application.Calculation = xlCalculationManual
+        
+        'Retrieve Target Folder Path From User
+          Set FldrPicker = Application.FileDialog(msoFileDialogFolderPicker)
+        
+            With FldrPicker
+              .Title = "Select A Target Folder"
+              .AllowMultiSelect = False
+                If .Show <> -1 Then GoTo NextCode
+                myPath = .SelectedItems(1) & "\"
+            End With
+        
+        
+        'In Case of Cancel
+NextCode:
+          myPath = myPath
+          If myPath = "" Then GoTo ResetSettings
+        
+        'Target File Extension (must include wildcard "*")
+          myExtension = "*.xls*"
+        
+        'Target Path with Ending Extention
+         ' myFile = Dir(myPath & myExtension)
+          
+          FolderCounter = FolderCount(myPath, "Rev")
+          ResultCounter = 1
+          
+        
+          
+          N = 1
+          
+          
+          Do Until N = FolderCounter + 1
+              
+              FinalName = myPath & "Rev" & N & "\" & CFile & "\"
+              N = N + 1
+             
+              
+              If ListallFiles(FinalName) > SheetCount Then
+                SheetCount = ListallFiles(FinalName)
+                MsgBox (ListallFiles(FinalName))
+                BaseFolder = myPath & "Rev" & N - 1 & "\" & CFile & "\"
+                
+              End If
+                
+              myFile = Dir(FinalName & myExtension)
+              Dim MyArray()
+             'Loop through each Excel file in folder
+              Do While myFile <> ""
+              
+                       
+                'Set variable equal to opened workbook
+                Set wb = Workbooks.Open(Filename:=FinalName & myFile)
+                  
+                  
+                
+                For Each Sheet In Worksheets
+                
+                    For i = 1 To UBound(FuncArray)
+                
+                        If Sheet.Name = FuncArray(i) Then
+                        
+                            SheetLatest = FinalName & myFile
+                            ListArray(i) = SheetLatest
+                            Results(ResultCounter) = FuncArray(i) & " Exists in  Revision" & N - 1
+                            ResultCounter = ResultCounter + 1
+                    
+                        End If
+                     Next i
+            
+                 Next Sheet
+        
+                'Save and Close Workbook
+                wb.Close SaveChanges:=True
+                  
+                DoEvents
+            
+                'Get next file name
+                 
+                myFile = Dir
+                  
+              Loop
+            Loop
+        'Message Box when tasks are completed
+        
+        
+       
+        'MsgBox (BaseRev)
+        'Copy Base Folder on Root Folder As Sheet Preparation
+        Call Copy_Folder(BaseFolder, myPath)
+        'Determine the next file number available for use by the FileOpen function
+          TextFile = FreeFile
+        For i = 1 To UBound(FuncArray)
+        
+            'Call CopySheetFromClosedWB(ListArray(i), FuncArray(i))
+            Call UpdateSheets(BaseFolder, ListArray(i), FuncArray(i))
+        Next i
+         
+        'Open the text file
+          Open FilePath For Output As TextFile
+          
+          For i = 1 To UBound(Results)
+           Print #TextFile, Results(i)
+          Next i
+        'Write some lines of text
+          'Print #TextFile, "Hello Everyone!"
+          'Print #TextFile, "I created this file with VBA."
+          'Print #TextFile, "Goodbye"
+          
+        'Save & Close Text File
+          Close TextFile
+ResetSettings:
+          'Reset Macro Optimization Settings
+            Application.EnableEvents = True
+            Application.Calculation = xlCalculationAutomatic
+            Application.ScreenUpdating = True
+        
+        End Sub
